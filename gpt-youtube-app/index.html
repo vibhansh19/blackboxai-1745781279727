@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube GPT Content Creator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-inter min-h-screen flex flex-col">
+  <header class="bg-white shadow p-4">
+    <h1 class="text-2xl font-bold text-gray-800">YouTube GPT Content Creator</h1>
+  </header>
+  <main class="flex-grow container mx-auto p-4">
+    <nav class="mb-6">
+      <ul class="flex space-x-4 text-gray-600">
+        <li><button id="tab-script" class="tab-button border-b-2 border-transparent hover:border-blue-500 pb-2">Script Writing</button></li>
+        <li><button id="tab-thumbnail" class="tab-button border-b-2 border-transparent hover:border-blue-500 pb-2">Thumbnail Prompt</button></li>
+        <li><button id="tab-banner" class="tab-button border-b-2 border-transparent hover:border-blue-500 pb-2">Banner Prompt</button></li>
+        <li><button id="tab-logo" class="tab-button border-b-2 border-transparent hover:border-blue-500 pb-2">Logo Prompt</button></li>
+      </ul>
+    </nav>
+
+    <section id="section-script" class="tab-section">
+      <h2 class="text-xl font-semibold mb-2">YouTube Script Writing</h2>
+      <textarea id="script-topic" rows="3" placeholder="Enter your video topic here..." class="w-full p-2 border rounded mb-2"></textarea>
+      <button id="generate-script" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Generate Script</button>
+      <pre id="script-result" class="mt-4 p-4 bg-white rounded shadow whitespace-pre-wrap max-h-96 overflow-auto"></pre>
+    </section>
+
+    <section id="section-thumbnail" class="tab-section hidden">
+      <h2 class="text-xl font-semibold mb-2">YouTube Thumbnail Prompt Generator</h2>
+      <textarea id="thumbnail-desc" rows="3" placeholder="Describe your thumbnail idea..." class="w-full p-2 border rounded mb-2"></textarea>
+      <button id="generate-thumbnail" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Generate Prompt</button>
+      <pre id="thumbnail-result" class="mt-4 p-4 bg-white rounded shadow whitespace-pre-wrap max-h-96 overflow-auto"></pre>
+    </section>
+
+    <section id="section-banner" class="tab-section hidden">
+      <h2 class="text-xl font-semibold mb-2">YouTube Banner Prompt Generator</h2>
+      <textarea id="banner-desc" rows="3" placeholder="Describe your banner idea..." class="w-full p-2 border rounded mb-2"></textarea>
+      <button id="generate-banner" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Generate Prompt</button>
+      <pre id="banner-result" class="mt-4 p-4 bg-white rounded shadow whitespace-pre-wrap max-h-96 overflow-auto"></pre>
+    </section>
+
+    <section id="section-logo" class="tab-section hidden">
+      <h2 class="text-xl font-semibold mb-2">YouTube Logo Prompt Generator</h2>
+      <textarea id="logo-desc" rows="3" placeholder="Describe your logo idea..." class="w-full p-2 border rounded mb-2"></textarea>
+      <button id="generate-logo" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Generate Prompt</button>
+      <pre id="logo-result" class="mt-4 p-4 bg-white rounded shadow whitespace-pre-wrap max-h-96 overflow-auto"></pre>
+    </section>
+  </main>
+
+  <footer class="bg-white shadow p-4 text-center text-gray-600">
+    &copy; 2024 YouTube GPT Content Creator
+  </footer>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab-button');
+    const sections = document.querySelectorAll('.tab-section');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('border-blue-600', 'text-blue-600'));
+        tab.classList.add('border-blue-600', 'text-blue-600');
+        const targetId = 'section-' + tab.id.split('-')[1];
+        sections.forEach(section => {
+          section.id === targetId ? section.classList.remove('hidden') : section.classList.add('hidden');
+        });
+      });
+    });
+
+    // Activate first tab by default
+    tabs[0].classList.add('border-blue-600', 'text-blue-600');
+    sections[0].classList.remove('hidden');
+
+    async function postData(url = '', data = {}) {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return response.json();
+    }
+
+    document.getElementById('generate-script').addEventListener('click', async () => {
+      const topic = document.getElementById('script-topic').value.trim();
+      if (!topic) {
+        alert('Please enter a video topic.');
+        return;
+      }
+      const resultEl = document.getElementById('script-result');
+      resultEl.textContent = 'Generating...';
+      try {
+        const data = await postData('http://localhost:3000/api/generate-script', { topic });
+        if (data.script) {
+          resultEl.textContent = data.script;
+        } else {
+          resultEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+        }
+      } catch (error) {
+        resultEl.textContent = 'Error: ' + error.message;
+      }
+    });
+
+    document.getElementById('generate-thumbnail').addEventListener('click', async () => {
+      const description = document.getElementById('thumbnail-desc').value.trim();
+      if (!description) {
+        alert('Please enter a thumbnail description.');
+        return;
+      }
+      const resultEl = document.getElementById('thumbnail-result');
+      resultEl.textContent = 'Generating...';
+      try {
+        const data = await postData('http://localhost:3000/api/generate-prompt', { task: 'thumbnail', description });
+        if (data.prompt) {
+          resultEl.textContent = data.prompt;
+        } else {
+          resultEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+        }
+      } catch (error) {
+        resultEl.textContent = 'Error: ' + error.message;
+      }
+    });
+
+    document.getElementById('generate-banner').addEventListener('click', async () => {
+      const description = document.getElementById('banner-desc').value.trim();
+      if (!description) {
+        alert('Please enter a banner description.');
+        return;
+      }
+      const resultEl = document.getElementById('banner-result');
+      resultEl.textContent = 'Generating...';
+      try {
+        const data = await postData('http://localhost:3000/api/generate-prompt', { task: 'banner', description });
+        if (data.prompt) {
+          resultEl.textContent = data.prompt;
+        } else {
+          resultEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+        }
+      } catch (error) {
+        resultEl.textContent = 'Error: ' + error.message;
+      }
+    });
+
+    document.getElementById('generate-logo').addEventListener('click', async () => {
+      const description = document.getElementById('logo-desc').value.trim();
+      if (!description) {
+        alert('Please enter a logo description.');
+        return;
+      }
+      const resultEl = document.getElementById('logo-result');
+      resultEl.textContent = 'Generating...';
+      try {
+        const data = await postData('http://localhost:3000/api/generate-prompt', { task: 'logo', description });
+        if (data.prompt) {
+          resultEl.textContent = data.prompt;
+        } else {
+          resultEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+        }
+      } catch (error) {
+        resultEl.textContent = 'Error: ' + error.message;
+      }
+    });
+  </script>
+</body>
+</html>
